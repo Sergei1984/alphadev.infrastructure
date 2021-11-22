@@ -14,21 +14,20 @@ SECRET_NAME=tls
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 
-# ~/.acme.sh/acme.sh  --register-account  -m myemail@example.com --server zerossl
+~/.acme.sh/acme.sh  --register-account  -m myemail@example.com --server zerossl
+~/.acme.sh/acme.sh --list | grep ${DOMAIN}
 
-# ~/.acme.sh/acme.sh --list | grep ${DOMAIN}
+if [[ $? == "1" ]]
+then
+    echo "Certificate not issued, issue..."
+    ~/.acme.sh/acme.sh  --issue -d *.${DOMAIN} --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
+fi
 
-# if [[ $? == "1" ]]
-# then
-#     echo "Certificate not issued, issue..."
-#     ~/.acme.sh/acme.sh  --issue -d *.${DOMAIN} --dns --yes-I-know-dns-manual-mode-enough-go-ahead-please
-# fi
+~/.acme.sh/acme.sh  --renew -d *.${DOMAIN} --yes-I-know-dns-manual-mode-enough-go-ahead-please
 
-# ~/.acme.sh/acme.sh  --renew -d *.${DOMAIN} --yes-I-know-dns-manual-mode-enough-go-ahead-please
+read -p "Update DNS, wait for 5 min and Press enter..."
 
-# read -p "Update DNS, wait for 5 min and Press enter..."
-
-# ~/.acme.sh/acme.sh  --renew -d *.${DOMAIN} --yes-I-know-dns-manual-mode-enough-go-ahead-please
+~/.acme.sh/acme.sh  --renew -d *.${DOMAIN} --yes-I-know-dns-manual-mode-enough-go-ahead-please
 
 CERT=~/.acme.sh/*.${DOMAIN}/*.${DOMAIN}.cer
 CERT_KEY=~/.acme.sh/*.${DOMAIN}/*.${DOMAIN}.key

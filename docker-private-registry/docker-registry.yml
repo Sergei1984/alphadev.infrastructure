@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: docker-registry
+spec:
+  selector:
+    matchLabels:
+      app: docker-registry
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: docker-registry
+    spec:
+      containers:
+        - name: docker-registry-container
+          image: registry
+          volumeMounts:
+            - name: registry-vol
+              mountPath: /var/lib/registry/
+            - name: auth-vol
+              mountPath: /etc/docker-registry-auth
+          env:
+            - name: REGISTRY_AUTH
+              value: htpasswd
+            - name: REGISTRY_AUTH_HTPASSWD_REALM
+              value: "Registry Realm"
+            - name: REGISTRY_AUTH_HTPASSWD_PATH
+              value: /etc/docker-registry-auth/htpasswd
+          ports:
+            - containerPort: 5000
+      volumes:
+        - name: registry-vol
+          hostPath:
+            path: /home/user86/dev/docker-registry/images
+        - name: auth-vol
+          hostPath:
+            path: /home/user86/dev/docker-registry/auth
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: docker-registry-service
+spec:
+  selector:
+    app: docker-registry
+  ports:
+    - protocol: TCP
+      port: 5000
+      targetPort: 5000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: docker-registry-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/proxy-body-size: 4096m
+spec:
+  tls:
+    - hosts:
+        - docker-registry.a-dev.com
+      secretName: tls
+  rules:
+    - host: docker-registry.a-dev.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: docker-registry-service
+                port:
+                  number: 5000
