@@ -1,3 +1,10 @@
+# SSL
+
+
+Copy secret from another namespace:
+
+`kubectl get secret tls --namespace=adev-tracker -o yaml | sed 's/namespace: .*/namespace: allcookies-tracker/' | kubectl apply -f -`
+
 # Docker registry
 
 ## Deployment
