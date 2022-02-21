@@ -19,7 +19,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
 if [[ ${COMMAND} == "reissue" ]]
 then
 
-    ~/.acme.sh/acme.sh  --register-account  -m myemail@example.com --server zerossl
+    ~/.acme.sh/acme.sh  --register-account  -m ${ACCOUNT} --server zerossl
     ~/.acme.sh/acme.sh --list | grep ${DOMAIN}
 
     if [[ $? == "1" ]]
@@ -36,10 +36,17 @@ then
 
 fi
 
+if [[ ${COMMAND} == "refresh" ]]
+then
+    ~/.acme.sh/acme.sh  --renew -d *.${DOMAIN} --yes-I-know-dns-manual-mode-enough-go-ahead-please
+fi
+
 CERT=~/.acme.sh/*.${DOMAIN}/*.${DOMAIN}.cer
 CERT_KEY=~/.acme.sh/*.${DOMAIN}/*.${DOMAIN}.key
 export KUBECONFIG="${DIR}/../kubeconfig_${ENV}"
 
+
 kubectl get namespaces | awk 'NR!=1 { print $1 }' | grep -v kube | while read -r ns ; do
+    kubectl delete secret/tls -n ${ns}
     kubectl create secret tls ${SECRET_NAME} --key ${CERT_KEY} --cert ${CERT} -n ${ns}
 done
